@@ -7,9 +7,9 @@ Aplikasi Pengingat Tugas adalah aplikasi web sederhana (single-file) untuk membu
 - Menambah, mengedit, dan menghapus tugas
 - Mengatur tanggal dan waktu pengerjaan (due date)
 - Notifikasi browser melalui Service Worker (jika diizinkan)
-- Alarm suara berulang sampai dihentikan
+- Alarm suara berulang sampai dihentikan atau sampai 15 menit
 - Tampilan daftar, kalender, dan grafik (chart)
-- Ekspor data (Teks .txt atau PDF .pdf) dengan format tanggal yang ramah pembaca (Bahasa Indonesia)
+- Ekspor data (Teks .txt atau PDF .pdf)
 - Penyimpanan data di `localStorage`
 
 ## Segera hadir
@@ -107,7 +107,7 @@ Catatan: tanggal dalam hasil ekspor telah diformat menggunakan helper `formatDat
 
 ## Lisensi
 
-- Anda dapat menambahkan lisensi sesuai kebutuhan. Saat ini file lisensi belum disertakan.
+- MIT
 
 ## Kontak / Catatan terakhir
 
