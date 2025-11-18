@@ -108,8 +108,3 @@ Catatan: tanggal dalam hasil ekspor telah diformat menggunakan helper `formatDat
 ## Lisensi
 
 - MIT
-
-## Kontak / Catatan terakhir
-
-- File backup `index.html.bak` dibuat untuk mempermudah rollback jika terjemahan atau perubahan menyebabkan masalah.
-- Jika Anda ingin saya menambahkan petunjuk lebih rinci (mis. cara build menjadi PWA, detail struktur data `localStorage`, atau menambah skrip pengujian), beri tahu saya dan saya akan tambahkan.
