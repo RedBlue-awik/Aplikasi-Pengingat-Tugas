@@ -1,0 +1,3324 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#4361ee" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-status-bar-style" content="default" />
+    <meta name="mobile-web-app-title" content="TaskReminder" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css" />
+    <title>Aplikasi Pengingat Tugas</title>
+    <link rel="icon" href="favicon.ico" type="image/x-icon" />
+
+    <style>
+      :root {
+        --primary-color: #4361ee;
+        --secondary-color: #372fd4;
+        --success-color: #167e22;
+        --danger-color: #f72525;
+        --warning-color: #cb9303;
+        --light-color: #f8f9fa;
+        --dark-color: #212529;
+      }
+
+      body {
+        background-color: #f5f7fb;
+        color: #333;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      .notification-status {
+        display: flex;
+        align-items: center;
+        border: 1px solid #dee2e6;
+      }
+
+      .notification-status-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+      }
+
+      .notification-status-granted {
+        background-color: rgba(22, 126, 34, 0.15);
+        color: var(--success-color);
+      }
+
+      .notification-status-denied {
+        background-color: rgba(247, 37, 37, 0.15);
+        color: var(--danger-color);
+      }
+
+      .notification-status-default {
+        background-color: rgba(67, 97, 238, 0.15);
+        color: var(--primary-color);
+      }
+
+      .notification-status-text {
+        font-size: 1rem;
+        font-weight: 500;
+      }
+
+      .test-notification-container {
+        border: 1px dashed #dee2e6;
+      }
+
+      .test-notification-btn {
+        font-weight: 500;
+      }
+
+      .sound-test-btn {
+        position: relative;
+        overflow: hidden;
+      }
+
+      .sound-test-btn.playing {
+        background-color: var(--danger-color) !important;
+        border-color: var(--danger-color) !important;
+        color: var(--light-color) !important;
+      }
+
+      .sound-test-btn.playing::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.5);
+        transform: translate(-50%, -50%);
+        animation: ripple 1s infinite;
+      }
+
+      @keyframes ripple {
+        0% {
+          width: 0;
+          height: 0;
+          opacity: 1;
+        }
+        100% {
+          width: 100px;
+          height: 100px;
+          opacity: 0;
+        }
+      }
+
+      .floating-btn {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 1000;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        font-size: 24px;
+        transition: all 0.3s ease;
+      }
+
+      .floating-btn:hover {
+        background-color: var(--secondary-color);
+        transform: scale(1.1);
+      }
+
+      .navbar {
+        top: 5px;
+      }
+
+      .task-item {
+        border-left: 4px solid var(--primary-color);
+        transition: all 0.3s ease;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+      }
+
+      .task-item:hover {
+        background-color: #f0f4ff;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      }
+
+      .task-item.completed {
+        border-left-color: var(--success-color);
+        opacity: 0.8;
+      }
+
+      .task-item.completed .task-title {
+        text-decoration: line-through;
+        color: #6c757d;
+      }
+
+      .priority-high {
+        border-left-color: var(--danger-color) !important;
+      }
+
+      .priority-medium {
+        border-left-color: #ff9e00 !important;
+      }
+
+      .priority-low {
+        border-left-color: #6c757d !important;
+      }
+
+      .task-actions .btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 3rem 1rem;
+        color: #6c757d;
+      }
+
+      .empty-state i {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+      }
+
+      .filter-buttons .btn {
+        margin-right: 0.5rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .sort-buttons .btn {
+        margin-right: 0.5rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .stats-card {
+        transition: all 0.3s ease;
+        border-radius: 12px;
+        overflow: hidden;
+      }
+
+      .stats-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+      }
+
+      .stats-card.border-primary {
+        border-color: var(--primary-color) !important;
+      }
+
+      .stats-card.border-success {
+        border-color: var(--success-color) !important;
+      }
+
+      .stats-card.border-warning {
+        border-color: var(--warning-color) !important;
+      }
+
+      .stats-card.border-danger {
+        border-color: #e63946 !important;
+      }
+
+      .calendar-container {
+        margin-bottom: 2rem;
+      }
+
+      .calendar-header {
+        justify-content: space-between;
+        margin-bottom: 1rem;
+      }
+
+      .fc-event.completed-event {
+        text-decoration: line-through !important;
+        color: #000 !important;
+        opacity: 0.6 !important;
+      }
+
+      .card.completed {
+        opacity: 0.7;
+      }
+
+      #clock {
+        font-size: 1.1rem;
+        font-weight: 500;
+      }
+
+      .streak-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin-bottom: 5px;
+        transition: all 0.3s ease;
+        background-color: var(--primary-color);
+        color: white;
+      }
+
+      .streak-count {
+        font-size: 0.8rem;
+        font-weight: 600;
+      }
+
+      .streak-orange {
+        background-color: #ff9e00;
+      }
+
+      .streak-red {
+        background-color: #ff4800;
+      }
+
+      .streak-blue {
+        background-color: var(--primary-color);
+      }
+
+      .streak-purple {
+        background-color: #7209b7;
+      }
+
+      .streak-gray {
+        background-color: #adb5bd;
+      }
+
+      .streak-black {
+        background: linear-gradient(330deg, #000, #7e7e7e);
+      }
+
+      .streak-active {
+        transform: scale(1.1);
+        box-shadow: 0 0 15px rgba(67, 97, 238, 0.4);
+      }
+
+      #calendar {
+        background: white;
+        border-radius: 12px;
+        padding: 1rem;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        min-height: 600px;
+      }
+
+      .streak-info {
+        font-size: 0.8rem;
+        color: #6c757d;
+        margin: 0 0 28px 12px;
+      }
+
+      .btn-primary {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+      }
+
+      .btn-primary:hover {
+        background-color: var(--secondary-color);
+        border-color: var(--secondary-color);
+      }
+
+      .btn-outline-primary {
+        color: var(--primary-color);
+        border-color: var(--primary-color);
+      }
+
+      .btn-outline-primary:hover {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+        color: white;
+      }
+
+      .card {
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        border: none;
+      }
+
+      .badge.bg-primary {
+        background-color: var(--primary-color) !important;
+      }
+
+      .badge.bg-danger {
+        background-color: var(--danger-color) !important;
+      }
+
+      .text-primary {
+        color: var(--primary-color) !important;
+      }
+
+      .text-success {
+        color: var(--success-color) !important;
+      }
+
+      .text-warning {
+        color: var(--warning-color) !important;
+      }
+
+      .notification-badge {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        background-color: var(--danger-color);
+        color: white;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        font-size: 0.7rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .view-toggle {
+        margin-bottom: 1rem;
+      }
+
+      .task-meta {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-top: 0.5rem;
+        flex-wrap: wrap;
+      }
+
+      .task-date {
+        font-size: 0.85rem;
+      }
+
+      .fc {
+        box-shadow: none !important;
+        color: #000 !important;
+      }
+
+      .fc-daygrid-day-number,
+      .fc-col-header-cell-cushion {
+        color: #000 !important;
+        text-decoration: none !important;
+      }
+
+      .fc-event-title {
+        color: #000 !important;
+        font-weight: 500;
+      }
+
+      .fc-event {
+        border: none !important;
+        padding: 2px 4px !important;
+        border-radius: 4px !important;
+      }
+
+      .calendar-task-detail {
+        max-width: 400px;
+      }
+
+      .task-checkbox-calendar {
+        margin-right: 8px;
+      }
+
+      .fc .fc-toolbar {
+        flex-wrap: wrap;
+      }
+
+      .fc .fc-toolbar-title {
+        font-size: 1.5rem;
+      }
+
+      .fc .fc-button {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+      }
+
+      .fc .fc-button:hover {
+        background-color: var(--secondary-color);
+        border-color: var(--secondary-color);
+      }
+
+      .fc .fc-button-primary:not(:disabled).fc-button-active {
+        background-color: var(--secondary-color);
+        border-color: var(--secondary-color);
+      }
+
+      .fc-daygrid-event {
+        cursor: pointer;
+      }
+
+      .fc-list-day-side-text,
+      .fc-list-day-text {
+        color: #000 !important;
+        text-decoration: none !important;
+      }
+
+      .task-detail-modal .task-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        font-size: 1.6rem;
+        margin-right: 15px;
+        flex-shrink: 0;
+      }
+
+      .task-detail-modal .task-icon.high {
+        background-color: rgba(247, 37, 37, 0.15);
+        color: var(--danger-color);
+      }
+
+      .task-detail-modal .task-icon.medium {
+        background-color: rgba(255, 158, 0, 0.15);
+        color: #ff9e00;
+      }
+
+      .task-detail-modal .task-icon.low {
+        background-color: rgba(108, 117, 125, 0.15);
+        color: #6c757d;
+      }
+
+      .task-detail-modal .task-icon.completed {
+        background-color: rgba(49, 189, 56, 0.208);
+        color: var(--success-color);
+      }
+
+      .task-detail-modal .task-info-item {
+        margin-bottom: 15px;
+        padding: 10px;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+      }
+
+      .task-detail-modal .task-info-item i {
+        width: 24px;
+        text-align: center;
+        margin-right: 10px;
+        color: var(--primary-color);
+      }
+
+      .task-detail-modal .status-badge {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-weight: 500;
+      }
+
+      .task-detail-modal .priority-badge {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-weight: 500;
+      }
+
+      .task-detail-modal .description-box {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 15px;
+        margin-top: 10px;
+        max-height: 150px;
+        overflow-y: auto;
+      }
+
+      .task-detail-modal .action-buttons {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        margin-top: 20px;
+      }
+
+      .task-detail-modal .action-buttons .btn {
+        flex: 1;
+        max-width: 120px;
+      }
+
+      .task-detail-modal .toggle-status {
+        background-color: #f8f9fa;
+        padding: 12px 15px;
+        border-radius: 8px;
+        margin-top: 15px;
+      }
+
+      .task-detail-modal .form-check-input {
+        width: 18px;
+        height: 18px;
+      }
+
+      .task-detail-modal .form-check-label {
+        font-weight: 500;
+        margin-left: 10px;
+      }
+
+      .chart-container {
+        margin-bottom: 2rem;
+      }
+
+      .chart-header {
+        justify-content: space-between;
+        margin-bottom: 1rem;
+      }
+
+      .chart-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1rem;
+        box-shadow: 0 0 5px rgba(0, 0, 0, 0.05);
+        margin-bottom: 2rem;
+      }
+
+      .chart-wrapper {
+        position: relative;
+        height: 400px;
+        margin-bottom: 2rem;
+      }
+
+      .chart-filters {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+      }
+
+      .chart-filters .form-label {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+      }
+
+      .sound-test-btn {
+        position: relative;
+        overflow: hidden;
+      }
+
+      .sound-test-btn.playing {
+        background-color: var(--danger-color) !important;
+        border-color: var(--danger-color) !important;
+        color: var(--light-color) !important;
+      }
+
+      .sound-test-btn.playing::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.5);
+        transform: translate(-50%, -50%);
+        animation: ripple 1s infinite;
+      }
+
+      @keyframes ripple {
+        0% {
+          width: 0;
+          height: 0;
+          opacity: 1;
+        }
+        100% {
+          width: 100px;
+          height: 100px;
+          opacity: 0;
+        }
+      }
+
+      .notification-status {
+        display: flex;
+        align-items: center;
+        margin-top: 10px;
+        padding: 10px;
+        border-radius: 8px;
+        background-color: #f8f9fa;
+      }
+
+      .notification-status-icon {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 10px;
+      }
+
+      .notification-status-granted {
+        background-color: rgba(22, 126, 34, 0.15);
+        color: var(--success-color);
+      }
+
+      .notification-status-denied {
+        background-color: rgba(247, 37, 37, 0.15);
+        color: var(--danger-color);
+      }
+
+      .notification-status-default {
+        background-color: rgba(67, 97, 238, 0.15);
+        color: var(--primary-color);
+      }
+
+      .notification-status-text {
+        font-size: 0.9rem;
+      }
+
+      .alarm-indicator {
+        display: none !important;
+      }
+
+      .notification-banner {
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        right: 20px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        padding: 1rem;
+        z-index: 9999;
+        display: none;
+        align-items: center;
+        gap: 1rem;
+      }
+
+      .notification-banner.show {
+        display: flex;
+      }
+
+      .notification-banner-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: var(--primary-color);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+      }
+
+      .notification-banner-content {
+        flex: 1;
+      }
+
+      .notification-banner-title {
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+      }
+
+      .notification-banner-text {
+        font-size: 0.9rem;
+        color: #6c757d;
+      }
+
+      .notification-banner-actions {
+        display: flex;
+        gap: 0.5rem;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Banner Izin Notifikasi Browser -->
+    <div class="notification-banner" id="notificationBanner">
+      <div class="notification-banner-icon">
+        <i class="fas fa-bell"></i>
+      </div>
+      <div class="notification-banner-content">
+        <div class="notification-banner-title">Aktifkan Notifikasi Browser</div>
+        <div class="notification-banner-text">Dapatkan pengingat tugas langsung di browser Anda</div>
+      </div>
+      <div class="notification-banner-actions">
+        <button class="btn btn-primary btn-sm" id="enableNotificationBannerBtn">Aktifkan</button>
+        <button class="btn btn-secondary btn-sm" id="dismissNotificationBannerBtn">Nanti</button>
+      </div>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg sticky-top my-3 mx-4 rounded-4 shadow bg-primary bg-gradient">
+      <div class="container-fluid">
+        <a class="text-light text-decoration-none fw-bold fs-4 mx-4" href=""> <i class="fas fa-tasks me-2"></i>A-P-T</a>
+        <div class="justify-content-end me-3">
+          <div class="navbar-nav">
+            <a class="nav-link position-relative mx-1 my-2 fw-semibold text-light text-decoration-none" href="#" id="settingsBtn">
+              <i class="fas fa-gear me-1 fs-5"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Konten Utama -->
+    <main class="container py-4">
+      <!-- Kartu -->
+      <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+          <div class="card stats-card border-primary h-100">
+            <div class="card-body text-center">
+              <h5 class="card-title">Total Tugas</h5>
+              <h2 class="text-primary" id="total-tasks">0</h2>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3 mb-3">
+          <div class="card stats-card border-success h-100">
+            <div class="card-body text-center">
+              <h5 class="card-title">Selesai</h5>
+              <h2 class="text-success" id="completed-tasks">0</h2>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3 mb-3">
+          <div class="card stats-card border-warning h-100">
+            <div class="card-body text-center">
+              <h5 class="card-title">Belum Selesai</h5>
+              <h2 class="text-warning" id="pending-tasks">0</h2>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3 mb-3">
+          <div class="card stats-card border-danger h-100">
+            <div class="card-body text-center">
+              <h5 class="card-title">Prioritas Tinggi</h5>
+              <h2 class="text-danger" id="high-priority-tasks">0</h2>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="d-flex justify-content-between align-items-center my-4">
+        <!-- Bagian Streak -->
+        <div class="d-flex align-items-center justify-content-center mb-4">
+          <div class="d-flex align-items-center flex-column">
+            <div class="streak-icon streak-blue" id="streak-icon">
+              <i class="fa-solid fa-fire"></i>
+            </div>
+            <div class="streak-count" id="streak-count">0</div>
+          </div>
+          <div class="streak-info text-center" id="streak-info"></div>
+        </div>
+
+        <!-- Pengalih Tampilan -->
+        <div class="view-toggle text-center mb-4" id="viewToggleContainer">
+          <div class="btn-group" role="group">
+            <button type="button" class="btn btn-outline-primary p-2 active" id="listViewBtn"><i class="fas fa-list me-2"></i>Daftar Tugas</button>
+            <button type="button" class="btn btn-outline-primary p-2" id="chartViewBtn"><i class="fas fa-chart-bar me-2"></i>Grafik</button>
+            <button type="button" class="btn btn-outline-primary p-2" id="calendarViewBtn"><i class="fas fa-calendar me-2"></i>Kalender</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bagian Daftar -->
+      <div class="list-container" id="listSection">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <h2 class="mb-0"><i class="fa-solid fa-list-check me-1"></i>Daftar Tugas</h2>
+          <div class="d-flex flex-wrap gap-2">
+            <div class="filter-buttons">
+              <button type="button" class="btn btn-outline-primary active" data-filter="all">Semua</button>
+              <button type="button" class="btn btn-outline-success" data-filter="completed">Selesai</button>
+              <button type="button" class="btn btn-outline-warning" data-filter="pending">Belum Selesai</button>
+            </div>
+            <div class="sort-buttons">
+              <div class="dropdown">
+                <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown"><i class="fas fa-sort me-1"></i>Urutkan</button>
+                <ul class="dropdown-menu">
+                  <li>
+                    <a class="dropdown-item" href="#" data-sort="date-desc">Terbaru</a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item" href="#" data-sort="date-asc">Terlama</a>
+                  </li>
+                  <li><hr class="dropdown-divider" /></li>
+                  <li>
+                    <a class="dropdown-item" href="#" data-sort="priority-high">Prioritas: Tinggi ke Rendah</a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item" href="#" data-sort="priority-low">Prioritas: Rendah ke Tinggi</a>
+                  </li>
+                  <li><hr class="dropdown-divider" /></li>
+                  <li>
+                    <a class="dropdown-item" href="#" data-sort="title-asc">Judul: A-Z</a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item" href="#" data-sort="title-desc">Judul: Z-A</a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="border-top border-dark border-2" style="margin-bottom: 2.5rem"></div>
+
+        <!-- Daftar Tugas -->
+        <div id="task-list">
+          <div class="empty-state">
+            <i class="fas fa-clipboard-list"></i>
+            <h4>Belum ada tugas</h4>
+            <p>Klik tombol "+" di bawah untuk menambahkan tugas pertama Anda</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bagian Grafik -->
+      <div class="chart-container d-none" id="chartSection">
+        <div class="card">
+          <div class="card-body">
+            <div class="chart-header d-flex align-items-center mx-3">
+              <h5><i class="fas fa-chart-bar me-2"></i>Grafik Tugas</h5>
+            </div>
+
+            <!-- Filter Grafik -->
+            <div class="chart-filters">
+              <div class="row">
+                <div class="col-md-6">
+                  <label for="chartStartDate" class="form-label">Tanggal Mulai</label>
+                  <input type="text" class="form-control" id="chartStartDate" placeholder="Pilih tanggal mulai" />
+                </div>
+                <div class="col-md-6">
+                  <label for="chartEndDate" class="form-label">Tanggal Selesai</label>
+                  <input type="text" class="form-control" id="chartEndDate" placeholder="Pilih tanggal selesai" />
+                </div>
+              </div>
+              <div class="row mt-2">
+                <div class="col-12">
+                  <button type="button" class="btn btn-primary btn-sm" id="applyChartFilter"><i class="fas fa-filter me-1"></i>Terapkan Filter</button>
+                  <button type="button" class="btn btn-secondary btn-sm" id="resetChartFilter"><i class="fas fa-undo me-1"></i>Reset</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6">
+                <div class="chart-card">
+                  <h6 class="text-center mb-3">Statistik Tugas</h6>
+                  <div class="chart-wrapper">
+                    <canvas id="taskStatsChart"></canvas>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="chart-card">
+                  <h6 class="text-center mb-3">Tugas per Prioritas</h6>
+                  <div class="chart-wrapper">
+                    <canvas id="priorityChart"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-12">
+                <div class="chart-card">
+                  <h6 class="text-center mb-3">Progress Tugas Harian</h6>
+                  <div class="chart-wrapper">
+                    <canvas id="dailyProgressChart"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Bagian Kalender -->
+    <div class="calendar-container d-none px-5" id="calendarSection">
+      <div class="card">
+        <div class="card-body">
+          <div class="calendar-header d-flex align-items-center mx-3">
+            <h5><i class="fas fa-calendar-check me-2"></i>Kalender Tugas</h5>
+            <div id="clock" class="fw-bold"></div>
+          </div>
+          <div id="calendar"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tombol Tambah Mengambang -->
+    <button type="button" class="btn btn-primary bg-gradient position-fixed d-flex justify-content-center align-items-center border border-0 floating-btn" data-bs-toggle="modal" data-bs-target="#addTaskModal">
+      <i class="fas fa-plus"></i>
+    </button>
+
+    <!-- Modal Tambah Tugas -->
+    <div class="modal fade" id="addTaskModal" tabindex="-1" aria-labelledby="addTaskModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="addTaskModalLabel"><i class="fas fa-plus-circle me-2"></i>Tambah Tugas Baru</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form id="taskForm">
+              <div class="mb-3">
+                <label for="taskTitle" class="form-label">Judul Tugas</label>
+                <input type="text" class="form-control" id="taskTitle" required placeholder="Masukkan judul tugas" />
+              </div>
+              <div class="mb-3">
+                <label for="taskDescription" class="form-label">Deskripsi</label>
+                <textarea class="form-control" id="taskDescription" rows="3" placeholder="Tambahkan deskripsi tugas (opsional)"></textarea>
+              </div>
+              <div class="mb-3">
+                <label for="taskPriority" class="form-label">Prioritas</label>
+                <select class="form-select" id="taskPriority">
+                  <option value="low">Rendah</option>
+                  <option value="medium" selected>Sedang</option>
+                  <option value="high">Tinggi</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label for="taskDueDate" class="form-label">Tanggal Pengerjaan</label>
+                <input type="text" class="form-control" id="taskDueDate" placeholder="Pilih tanggal dan waktu" required />
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+            <button type="button" class="btn btn-primary" id="saveTaskBtn"><i class="fas fa-save me-1"></i>Simpan</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Edit Tugas -->
+    <div class="modal fade" id="editTaskModal" tabindex="-1" aria-labelledby="editTaskModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="editTaskModalLabel"><i class="fas fa-edit me-2"></i>Edit Tugas</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form id="editTaskForm">
+              <input type="hidden" id="editTaskId" />
+              <div class="mb-3">
+                <label for="editTaskTitle" class="form-label">Judul Tugas</label>
+                <input type="text" class="form-control" id="editTaskTitle" required />
+              </div>
+              <div class="mb-3">
+                <label for="editTaskDescription" class="form-label">Deskripsi</label>
+                <textarea class="form-control" id="editTaskDescription" rows="3"></textarea>
+              </div>
+              <div class="mb-3">
+                <label for="editTaskPriority" class="form-label">Prioritas</label>
+                <select class="form-select" id="editTaskPriority">
+                  <option value="low">Rendah</option>
+                  <option value="medium">Sedang</option>
+                  <option value="high">Tinggi</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label for="editTaskDueDate" class="form-label">Tanggal Pengerjaan</label>
+                <input type="text" class="form-control" id="editTaskDueDate" placeholder="Pilih tanggal dan waktu" required />
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+            <button type="button" class="btn btn-primary" id="updateTaskBtn"><i class="fas fa-sync-alt me-1"></i>Perbarui</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Detail Tugas -->
+    <div class="modal fade task-detail-modal" id="taskDetailModal" tabindex="-1" aria-labelledby="taskDetailModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header bg-light bg-gradient px-4">
+            <div class="d-flex align-items-center w-100">
+              <div class="task-icon d-flex justify-content-center align-items-center" id="detailTaskIcon">
+                <i class="fas fa-tasks"></i>
+              </div>
+              <div class="flex-grow-1">
+                <h5 class="modal-title mb-1" id="detailTaskTitle">Judul Tugas</h5>
+                <div class="d-flex gap-2">
+                  <span class="status-badge badge" id="detailTaskStatus">Status</span>
+                  <span class="priority-badge badge" id="detailTaskPriority">Prioritas</span>
+                </div>
+              </div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="task-info-item d-flex align-items-center">
+              <i class="fas fa-calendar-day"></i>
+              <div>
+                <strong>Tanggal Pengerjaan:</strong>
+                <div id="detailTaskDueDate" class="text-muted">-</div>
+              </div>
+            </div>
+
+            <div class="task-info-item d-flex align-items-center">
+              <i class="fas fa-clock"></i>
+              <div>
+                <strong>Dibuat Pada:</strong>
+                <div id="detailTaskCreated" class="text-muted">-</div>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <span class="fw-bold ms-2">Deskripsi:</span>
+              <div class="description-box mt-2" id="detailTaskDescription">
+                <span class="text-muted">Tidak ada deskripsi</span>
+              </div>
+            </div>
+
+            <div class="toggle-status d-flex align-items-center justify-content-between">
+              <div>
+                <strong>Status Tugas:</strong>
+                <div class="text-muted small" id="detailTaskStatusText">Tandai sebagai selesai/belum selesai</div>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="detailTaskCompleted" />
+                <label class="form-check-label" for="detailTaskCompleted"></label>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <div class="action-buttons w-100">
+              <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Tutup</button>
+              <button type="button" class="btn btn-outline-danger" id="detailDeleteBtn"><i class="fas fa-trash me-1"></i>Hapus</button>
+              <button type="button" class="btn btn-primary" id="detailEditBtn"><i class="fas fa-edit me-1"></i>Edit</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Pengaturan -->
+    <div class="modal fade" id="settingsModal" tabindex="-1" aria-labelledby="settingsModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="settingsModalLabel"><i class="fas fa-cogs me-2"></i>Pengaturan</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body p-0">
+            <!-- Navigasi Tabs -->
+            <ul class="nav nav-tabs" id="settingsTabs" role="tablist">
+              <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="sound-tab" data-bs-toggle="tab" data-bs-target="#sound-settings" type="button" role="tab" aria-controls="sound-settings" aria-selected="true">
+                  <i class="fas fa-volume-up me-2"></i>Suara & Alarm
+                </button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="notification-tab" data-bs-toggle="tab" data-bs-target="#notification-settings" type="button" role="tab" aria-controls="notification-settings" aria-selected="false">
+                  <i class="fas fa-bell me-2"></i>Notifikasi
+                </button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="other-tab" data-bs-toggle="tab" data-bs-target="#other-settings" type="button" role="tab" aria-controls="other-settings" aria-selected="false">
+                  <i class="fas fa-sliders-h me-2"></i>Lainnya
+                </button>
+              </li>
+            </ul>
+
+            <!-- Pengaturan-Tabs -->
+            <div class="tab-content p-4" id="settingsTabContent">
+              <!-- Pengaturan Suara -->
+              <div class="tab-pane fade show active" id="sound-settings" role="tabpanel" aria-labelledby="sound-tab">
+                <div class="row g-3">
+                  <div class="col-12">
+                    <label class="form-label fw-bold">Pilih Suara Alarm</label>
+                    <select id="soundSelect" class="form-select">
+                      <option value="Alarm.mp3" selected>Alarm</option>
+                      <option value="Digital-Alarm.wav">Digital Alarm</option>
+                      <option value="Oversimplified-Alarm.mp3">Oversimplified Alarm</option>
+                      <option value="Warning-Alarm.wav">Warning Alarm</option>
+                    </select>
+                  </div>
+
+                  <div class="col-12">
+                    <label class="form-label fw-bold">Volume Alarm</label>
+                    <div class="d-flex align-items-center gap-3">
+                      <i class="fas fa-volume-off text-muted"></i>
+                      <input type="range" class="form-range flex-grow-1" id="alarmVolume" min="0" max="100" value="80" />
+                      <i class="fas fa-volume-up text-muted"></i>
+                      <span class="badge bg-primary" id="volumeValue">80%</span>
+                    </div>
+                  </div>
+
+                  <div class="col-12">
+                    <label class="form-label fw-bold">Test Suara</label>
+                    <div class="d-flex gap-2">
+                      <button id="testSoundBtn" class="btn btn-outline-primary flex-fill"><i class="fas fa-play me-1"></i>Test Suara</button>
+                      <button hidden id="stopSoundBtn" class="btn btn-outline-danger flex-fill" style="display: none"><i class="fas fa-stop me-1"></i>Stop</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Pengaturan Notifikasi -->
+              <div class="tab-pane fade" id="notification-settings" role="tabpanel" aria-labelledby="notification-tab">
+                <div class="row g-3">
+                  <div class="col-12">
+                    <div class="notification-status p-3 rounded bg-light">
+                      <div class="d-flex align-items-center">
+                        <div id="notificationStatusIcon" class="notification-status-icon notification-status-default me-3">
+                          <i class="fas fa-question"></i>
+                        </div>
+                        <div id="notificationStatusText" class="notification-status-text fw-medium">Status notifikasi tidak diketahui</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="col-12">
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" id="enableNotifications" checked />
+                      <label class="form-check-label" for="enableNotifications"> <i class="fas fa-bell me-2"></i>Aktifkan Notifikasi Browser </label>
+                    </div>
+                  </div>
+
+                  <div class="col-12">
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" id="enableAlarm" checked />
+                      <label class="form-check-label" for="enableAlarm"> <i class="fas fa-volume-up me-2"></i>Aktifkan Alarm Suara </label>
+                    </div>
+                  </div>
+
+                  <div class="col-12">
+                    <button id="enableNotificationsBtn" class="btn btn-primary w-100 mb-2"><i class="fas fa-bell me-1"></i>Aktifkan Notifikasi Browser</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Pengaturan Lainnya -->
+              <div class="tab-pane fade" id="other-settings" role="tabpanel" aria-labelledby="other-tab">
+                <div class="row g-3">
+                  <div class="col-12">
+                    <h6 class="fw-bold mb-3">Tampilan Aplikasi</h6>
+                    <div class="form-check form-switch mb-2">
+                      <input class="form-check-input" type="checkbox" id="showChartView" checked />
+                      <label class="form-check-label" for="showChartView"> <i class="fas fa-chart-bar me-2"></i>Tampilkan Menu Grafik </label>
+                    </div>
+
+                    <div class="form-check form-switch mb-2">
+                      <input class="form-check-input" type="checkbox" id="showCalendarView" checked />
+                      <label class="form-check-label" for="showCalendarView"> <i class="fas fa-calendar me-2"></i>Tampilkan Kalender </label>
+                    </div>
+                  </div>
+
+                  <div class="col-12">
+                    <h6 class="fw-bold mb-3">Manajemen Data</h6>
+                    <div class="d-grid gap-2">
+                      <button class="btn btn-warning" id="exportDataBtn"><i class="fas fa-download me-2"></i>Export Data</button>
+                      <button class="btn btn-danger" id="clearDataBtn"><i class="fas fa-trash me-2"></i>Hapus Semua Data</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+            <button id="saveSettingsBtn" class="btn btn-primary"><i class="fas fa-save me-1"></i>Simpan Pengaturan</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales/id.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <script>
+      let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+      let streakData = JSON.parse(localStorage.getItem("streakData")) || {
+        currentStreak: 0,
+        lastCompletedDate: null,
+        lastActivityDate: null,
+        isStreakInactive: false,
+      };
+
+      let sounds = [];
+      let settings = JSON.parse(localStorage.getItem("settings")) || {
+        enableNotifications: true,
+        enableAlarm: true,
+        showChartView: true,
+        showCalendarView: true,
+        alarmVolume: 80,
+        selectedSound: "Alarm.mp3",
+        notificationPermissionRequested: false,
+        notificationBannerDismissed: false,
+        chartFilters: {
+          startDate: null,
+          endDate: null,
+        },
+      };
+
+      let currentView = localStorage.getItem("currentView") || "list";
+      let calendar = null;
+      let currentTaskDetail = null;
+      let currentNotificationTask = null;
+      let snoozeTimeouts = {};
+      let alarmTimeouts = {};
+      let isPageVisible = true;
+      let notificationInterval = null;
+      let audioContext = null;
+      let alarmAudio = null;
+      let autoHideTimeout = null;
+      let currentAlarmInterval = null;
+      let currentAudio = null;
+      let activeAudioElements = new Set();
+      let activeAudioContexts = new Set();
+      let audioAttemptInProgress = false;
+      let taskStatsChart = null;
+      let priorityChart = null;
+      let dailyProgressChart = null;
+      let chartStartDate = null;
+      let chartEndDate = null;
+      let scheduledChecks = {};
+
+      function scheduleTaskCheck(task) {
+        if (!task.dueDate || task.completed) return;
+
+        const dueDate = new Date(task.dueDate);
+        const now = new Date();
+        const timeUntilDue = dueDate.getTime() - now.getTime();
+
+        if (timeUntilDue <= 0) {
+          checkDueTasks();
+          return;
+        }
+
+        if (timeUntilDue > 0) {
+          if (scheduledChecks[task.id]) {
+            clearTimeout(scheduledChecks[task.id]);
+          }
+
+          scheduledChecks[task.id] = setTimeout(() => {
+            checkDueTasks();
+            delete scheduledChecks[task.id];
+          }, timeUntilDue);
+        }
+      }
+
+      // Jadwal ulang semua tugas yang belum selesai
+      function scheduleAllTasks() {
+        Object.values(scheduledChecks).forEach((timeout) => clearTimeout(timeout));
+        scheduledChecks = {};
+
+        tasks.forEach((task) => {
+          scheduleTaskCheck(task);
+        });
+      }
+
+      // Setup awal pas halaman siap (inisialisasi & penanganan event)
+      $(document).ready(function () {
+        cleanupSnoozeTimeouts();
+
+        initializeSounds();
+
+        $("#soundSelect").on("change", function () {
+          if ($("#testSoundBtn").hasClass("playing")) {
+            stopSound();
+            const selectedSound = $(this).val();
+            playAlarmWithSound(selectedSound);
+          }
+        });
+
+        window.taskPicker = flatpickr("#taskDueDate", {
+          enableTime: true,
+          dateFormat: "Y-m-d H:i",
+          locale: "en",
+          minDate: "today",
+          time_24hr: true,
+          minuteIncrement: 1,
+          allowInput: true,
+          clickOpens: true,
+        });
+
+        flatpickr("#editTaskDueDate", {
+          enableTime: true,
+          dateFormat: "Y-m-d H:i",
+          locale: "en",
+          minDate: "today",
+          time_24hr: true,
+          minuteIncrement: 1,
+          allowInput: true,
+          clickOpens: true,
+        });
+
+        window.chartStartDatePicker = flatpickr("#chartStartDate", {
+          dateFormat: "Y-m-d",
+          locale: "en",
+          onChange: function (selectedDates) {
+            chartStartDate = selectedDates[0];
+            if (chartEndDate && chartStartDate > chartEndDate) {
+              chartEndDatePicker.setDate(chartStartDate);
+            }
+          },
+        });
+
+        window.chartEndDatePicker = flatpickr("#chartEndDate", {
+          dateFormat: "Y-m-d",
+          locale: "en",
+          onChange: function (selectedDates) {
+            chartEndDate = selectedDates[0];
+            if (chartStartDate && chartEndDate < chartStartDate) {
+              chartStartDatePicker.setDate(chartEndDate);
+            }
+          },
+        });
+
+        // Atur tanggal default (30 hari terakhir)
+        const endDate = new Date();
+        const startDate = new Date();
+        startDate.setDate(startDate.getDate() - 30);
+        chartStartDatePicker.setDate(startDate);
+        chartEndDatePicker.setDate(endDate);
+
+        initCalendar();
+        initCharts();
+
+        // Baca dari settings, jangan hardcode
+        $("#soundSelect").val(settings.selectedSound || "Alarm.mp3");
+        $("#enableNotifications").prop("checked", settings.enableNotifications);
+        $("#enableAlarm").prop("checked", settings.enableAlarm);
+        $("#showChartView").prop("checked", settings.showChartView);
+        $("#showCalendarView").prop("checked", settings.showCalendarView);
+        $("#alarmVolume").val(settings.alarmVolume);
+        $("#volumeValue").text(settings.alarmVolume + "%");
+        $("#alarmVolume").on("input", function () {
+          const v = $(this).val();
+          $("#volumeValue").text(v + "%");
+          settings.alarmVolume = Number(v);
+          if (currentAudio) {
+            try {
+              currentAudio.volume = settings.alarmVolume / 100;
+            } catch (e) {}
+          }
+          saveToStorage();
+        });
+
+        // Show/hide views based on settings
+        if (!settings.showChartView) {
+          $("#chartViewBtn").hide();
+        }
+        if (!settings.showCalendarView) {
+          $("#calendarViewBtn").hide();
+        }
+
+        renderTasks();
+        updateStats();
+        updateStreak();
+        updateCharts();
+        startTaskChecking();
+        startClock();
+        checkStreakInactivity();
+
+        if (currentView === "calendar") {
+          switchView("calendar");
+        } else if (currentView === "chart") {
+          switchView("chart");
+        } else {
+          switchView("list");
+        }
+
+        checkNotificationPermission();
+        setupPageVisibility();
+        preloadAlarmAudio();
+        showNotificationBanner();
+
+        $("#saveTaskBtn").click(saveTask);
+        $("#updateTaskBtn").click(updateTask);
+        $(".filter-buttons").on("click", ".btn", handleFilter);
+        $(".sort-buttons").on("click", ".dropdown-item", handleSort);
+        $("#settingsBtn").click(showSettingsModal);
+        $("#chartViewBtn").click(() => switchView("chart"));
+        $("#calendarViewBtn").click(() => switchView("calendar"));
+        $("#listViewBtn").click(() => switchView("list"));
+        $("#testSoundBtn").click(testSound);
+        $("#stopSoundBtn").click(stopSound);
+        $("#saveSettingsBtn").click(saveSettings);
+        $("#enableNotificationsBtn").click(requestNotificationPermission);
+        $("#applyChartFilter").click(applyChartFilter);
+        $("#resetChartFilter").click(resetChartFilter);
+        $("#enableNotificationBannerBtn").click(requestNotificationPermission);
+        $("#dismissNotificationBannerBtn").click(dismissNotificationBanner);
+        $("#exportDataBtn").click(exportData);
+        $("#clearDataBtn").click(clearAllData);
+
+        $("#detailTaskCompleted").change(toggleTaskCompletion);
+        $("#detailEditBtn").click(editTaskFromDetail);
+        $("#detailDeleteBtn").click(deleteTaskFromDetail);
+
+        window.addEventListener("beforeunload", () => {
+          Object.values(scheduledChecks).forEach((timeout) => clearTimeout(timeout));
+        });
+      });
+
+      async function playAlarmWithSound(soundFile) {
+        if (!settings.enableAlarm) {
+          return;
+        }
+
+        if (audioAttemptInProgress) {
+          return;
+        }
+        audioAttemptInProgress = true;
+
+        try {
+          forceStopAlarm();
+        } catch (e) {}
+
+        const candidates = [];
+        const provided = String(soundFile || "");
+        const hasExt = /\.[a-z0-9]+$/i.test(provided);
+        if (hasExt) candidates.push(provided);
+        else candidates.push(provided + ".mp3");
+
+        const base = provided.replace(/\.[^.]+$/, "");
+        const altExts = [".mp3", ".ogg", ".wav"];
+        altExts.forEach((ext) => {
+          const name = hasExt ? provided : base + ext;
+          if (!candidates.includes(name)) candidates.push(name);
+        });
+
+        let played = false;
+        for (const name of candidates) {
+          const path = `./sound/${name}`;
+          try {
+            let ok = true;
+            try {
+              const resp = await fetch(path, { method: "GET" });
+              const ct = resp.headers.get("content-type") || "";
+              if (!resp.ok) ok = false;
+            } catch (fetchErr) {
+              ok = false;
+            }
+
+            if (!ok) {
+              continue;
+            }
+
+            const audio = new Audio();
+            audio.preload = "auto";
+            audio.src = path;
+            audio.volume = settings.alarmVolume / 100;
+
+            audio.onplay = function () {
+              $("#testSoundBtn").addClass("playing").html('<i class="fas fa-stop me-1"></i>Stop');
+              $("#stopSoundBtn").show();
+            };
+
+            audio.onended = function () {
+              $("#testSoundBtn").removeClass("playing").html('<i class="fas fa-play me-1"></i>Test Suara');
+              $("#stopSoundBtn").hide();
+              try {
+                audio.src = "";
+              } catch (e) {}
+              activeAudioElements.delete(audio);
+              if (currentAudio === audio) currentAudio = null;
+            };
+
+            audio.onerror = function (ev) {
+              activeAudioElements.delete(audio);
+            };
+
+            activeAudioElements.add(audio);
+            currentAudio = audio;
+            try {
+              audio.load();
+            } catch (e) {}
+            const pp = audio.play();
+            if (pp !== undefined) {
+              try {
+                await pp;
+                played = true;
+                break;
+              } catch (playErr) {
+                try {
+                  audio.src = "";
+                } catch (e) {}
+                activeAudioElements.delete(audio);
+                currentAudio = null;
+              }
+            }
+          } catch (err) {
+            currentAudio = null;
+            continue;
+          }
+        }
+
+        if (!played) {
+          try {
+            currentAudio = null;
+          } catch (e) {}
+          playBeep();
+        }
+
+        audioAttemptInProgress = false;
+      }
+
+      // Putar alarm
+      function playAlarm() {
+        const selectedSound = settings.selectedSound || "Alarm.mp3";
+
+        if (!currentAudio) {
+          playAlarmWithSound(selectedSound);
+        } else {
+        }
+      }
+
+      // Fallback beep kalau file gak mau kebuka
+      function playBeep() {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = ctx.createOscillator();
+        const gainNode = ctx.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(ctx.destination);
+
+        oscillator.type = "sine";
+        oscillator.frequency.value = 800;
+        gainNode.gain.value = settings.alarmVolume / 100;
+
+        oscillator.start();
+        oscillator.stop(ctx.currentTime + 0.2);
+
+        try {
+          activeAudioContexts.add(ctx);
+        } catch (e) {}
+
+        oscillator.onended = function () {
+          setTimeout(() => {
+            try {
+              ctx.close();
+            } catch (e) {}
+            try {
+              activeAudioContexts.delete(ctx);
+            } catch (e) {}
+          }, 100);
+        };
+      }
+
+      // Hentikan suara & reset tombol
+      function stopSound() {
+        if (currentAudio) {
+          currentAudio.pause();
+          currentAudio = null;
+        }
+
+        $("#testSoundBtn").removeClass("playing").html('<i class="fas fa-play me-1"></i>Test Suara');
+        $("#stopSoundBtn").hide();
+      }
+
+      // Tombol uji suara (play/stop)
+      function testSound() {
+        if ($("#testSoundBtn").hasClass("playing")) {
+          stopSound();
+        } else {
+          const selectedSound = $("#soundSelect").val();
+          playAlarmWithSound(selectedSound);
+        }
+      }
+
+      // Alarm berulang: mainkan terus sampai dihentikan
+      function startContinuousAlarm() {
+        if (!settings.enableAlarm) {
+          return;
+        }
+
+        forceStopAlarm();
+
+        playAlarm();
+
+        currentAlarmInterval = setInterval(() => {
+          if (!currentAudio) {
+            playAlarm();
+          }
+        }, 5000);
+
+        setTimeout(() => {
+          stopContinuousAlarm();
+        }, 15 * 60 * 1000);
+      }
+
+      function stopContinuousAlarm() {
+        // Hentikan interval alarm
+        if (currentAlarmInterval) {
+          clearInterval(currentAlarmInterval);
+          currentAlarmInterval = null;
+        }
+
+        if (currentAudio) {
+          try {
+            currentAudio.pause();
+            currentAudio.currentTime = 0;
+            currentAudio.src = "";
+            if (currentAudio.onplay) currentAudio.onplay = null;
+            if (currentAudio.onended) currentAudio.onended = null;
+            if (currentAudio.onerror) currentAudio.onerror = null;
+            currentAudio = null;
+          } catch (e) {}
+        }
+
+        if (audioContext) {
+          try {
+            audioContext
+              .close()
+              .then(() => {
+                audioContext = null;
+              })
+              .catch((e) => {});
+          } catch (e) {}
+        }
+
+        $("#testSoundBtn").removeClass("playing").html('<i class="fas fa-play me-1"></i>Test Suara');
+        $("#stopSoundBtn").hide();
+
+        Object.keys(snoozeTimeouts).forEach((taskId) => {
+          clearTimeout(snoozeTimeouts[taskId]);
+          delete snoozeTimeouts[taskId];
+        });
+      }
+
+      // Tambahkan fungsi force stop
+      function forceStopAlarm() {
+        document.querySelectorAll("audio").forEach((audio) => {
+          try {
+            audio.pause();
+            audio.currentTime = 0;
+            audio.src = "";
+            try {
+              audio.load();
+            } catch (e) {}
+          } catch (e) {}
+        });
+        try {
+          activeAudioElements.forEach((audio) => {
+            try {
+              audio.pause();
+              audio.currentTime = 0;
+              audio.src = "";
+              try {
+                audio.load();
+              } catch (e) {}
+            } catch (e) {}
+          });
+          activeAudioElements.clear();
+        } catch (e) {}
+        try {
+          activeAudioContexts.forEach((ctx) => {
+            try {
+              ctx.close();
+            } catch (e) {}
+          });
+          activeAudioContexts.clear();
+        } catch (e) {}
+        if (audioContext) {
+          try {
+            audioContext
+              .close()
+              .then(() => {
+                audioContext = null;
+              })
+              .catch(() => {
+                audioContext = null;
+              });
+          } catch (e) {
+            audioContext = null;
+          }
+        }
+
+        if (currentAlarmInterval) {
+          clearInterval(currentAlarmInterval);
+          currentAlarmInterval = null;
+        }
+
+        currentAudio = null;
+        $("#testSoundBtn").removeClass("playing").html('<i class="fas fa-play me-1"></i>Test Suara');
+        $("#stopSoundBtn").hide();
+      }
+
+      // SISTEM NOTIFIKASI
+      function checkDueTasks() {
+        const now = new Date();
+
+        const dueTasks = tasks.filter((task) => {
+          if (!task.dueDate || task.completed) return false;
+
+          const dueDate = new Date(task.dueDate);
+          const isSnoozed = task.snoozed && task.snoozeUntil && Date.now() < task.snoozeUntil;
+          return now >= dueDate && !isSnoozed && !task.notified;
+        });
+
+        if (dueTasks.length === 0) return;
+
+        dueTasks.sort((a, b) => {
+          const priorityOrder = { high: 3, medium: 2, low: 1 };
+          return priorityOrder[b.priority] - priorityOrder[a.priority];
+        });
+
+        dueTasks.forEach((task) => {
+          task.notified = true;
+          showNotification(task);
+        });
+
+        saveToStorage();
+
+        if (dueTasks.length > 0) {
+          startContinuousAlarm();
+        }
+      }
+
+      // Service pengecekan tugas jalanin check dan schedule berkala
+      function startTaskChecking() {
+        checkDueTasks();
+
+        scheduleAllTasks();
+
+        setInterval(() => {
+          checkDueTasks();
+          scheduleAllTasks();
+        }, 60000);
+      }
+
+      // Notifikasi: kirim ke service worker kalau diizinin
+      function showNotification(task) {
+        if (!settings.enableNotifications) {
+          return;
+        }
+
+        if (task.snoozed && task.snoozeUntil && Date.now() < task.snoozeUntil) {
+          return;
+        }
+
+        const dueDate = new Date(task.dueDate);
+        const now = new Date();
+        if (now < dueDate) {
+          return;
+        }
+
+        const formattedDate = dueDate.toLocaleString("id-ID", {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+
+        const message = `Tugas "${task.title}" harus di kerjakan pada ${formattedDate}`;
+
+        currentNotificationTask = task;
+
+        task.notified = true;
+        saveToStorage();
+
+        // Tampilkan browser notification melalui service worker
+        if ("Notification" in window && "serviceWorker" in navigator) {
+          if (Notification.permission === "granted") {
+            const payload = {
+              type: "SHOW_NOTIFICATION",
+              title: "⏰ Pengingat Tugas",
+              body: message,
+              icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📋</text></svg>",
+              badge: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔔</text></svg>",
+              tag: `task-${task.id}`,
+              data: {
+                taskId: task.id,
+                soundFile: settings.selectedSound || "Alarm.mp3",
+              },
+            };
+
+            if (navigator.serviceWorker.controller) {
+              navigator.serviceWorker.controller.postMessage(payload);
+            } else if ("serviceWorker" in navigator && navigator.serviceWorker.ready) {
+              navigator.serviceWorker.ready.then((reg) => {
+                if (reg.active) reg.active.postMessage(payload);
+              });
+            }
+
+            forceStopAlarm();
+            playAlarm();
+          } else {
+          }
+        } else {
+        }
+      }
+
+      // Kalau gak ada service worker, pakai notifikasi biasa
+      function showBasicNotification(task, message) {
+        try {
+          const notification = new Notification("⏰ Pengingat Tugas", {
+            body: message,
+            icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📋</text></svg>",
+            tag: `task-${task.id}`,
+            requireInteraction: true,
+            silent: false,
+            badge: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔔</text></svg>",
+            data: { taskId: task.id },
+          });
+
+          notification.onclick = function () {
+            window.focus();
+            $("#taskDetailModal").modal("show");
+            showTaskDetailInModal(task);
+            notification.close();
+          };
+
+          notification.onclose = function () {};
+        } catch (error) {}
+      }
+
+      // Mampilin detail tugas di modal (klik event)
+      function showTaskDetailInModal(task) {
+        currentTaskDetail = task;
+        updateTaskDetailModal(task);
+      }
+
+      function snoozeNotification(task, minutes) {
+        stopContinuousAlarm();
+
+        task.notified = true;
+        task.snoozed = true;
+        task.snoozeUntil = Date.now() + minutes * 60 * 1000;
+
+        saveToStorage();
+
+        if (snoozeTimeouts[task.id]) {
+          clearTimeout(snoozeTimeouts[task.id]);
+        }
+
+        snoozeTimeouts[task.id] = setTimeout(() => {
+          const existingTask = tasks.find((t) => t.id === task.id);
+          if (existingTask && !existingTask.completed) {
+            existingTask.snoozed = false;
+            existingTask.snoozeUntil = null;
+            existingTask.notified = false;
+            saveToStorage();
+
+            showNotification(existingTask);
+          }
+          delete snoozeTimeouts[task.id];
+        }, minutes * 60 * 1000);
+
+        showToast(`Notifikasi ditunda selama ${minutes} menit`, "info");
+      }
+
+      function markTaskAsCompleted(task) {
+        stopContinuousAlarm();
+
+        const taskIndex = tasks.findIndex((t) => t.id === task.id);
+        if (taskIndex !== -1) {
+          tasks[taskIndex].completed = true;
+
+          renderTasks($(".filter-buttons .btn.active").data("filter"));
+          updateStats();
+          updateCalendar();
+          updateCharts();
+
+          addToStreak();
+
+          saveToStorage();
+
+          showToast(`Tugas "${task.title}" ditandai sebagai selesai`, "success");
+        }
+      }
+
+      function handleServiceWorkerMessage(event) {
+        const data = event.data;
+
+        if (!data.type) {
+          return;
+        }
+
+        if (data.type === "STOP_ALARM_IMMEDIATELY") {
+          forceStopAlarm();
+          if (data.action === "snooze") {
+            snoozeTaskFromSW(data.taskId, 5);
+          } else if (data.action === "complete") {
+            completeTaskFromSW(data.taskId);
+          } else if (data.action === "dismiss") {
+            showToast("Alarm dihentikan", "info");
+          }
+          return;
+        }
+        switch (data.type) {
+          case "snooze":
+            snoozeTaskFromSW(data.taskId, data.minutes || 5);
+            break;
+          case "complete":
+            completeTaskFromSW(data.taskId);
+            break;
+          case "dismiss":
+            dismissAlarmFromSW();
+            break;
+          default:
+        }
+      }
+
+      // Helper buat aksi yang datang dari service worker
+      function snoozeTaskFromSW(taskId, minutes) {
+        const task = tasks.find((t) => t.id === taskId);
+        if (task) {
+          forceStopAlarm();
+          task.notified = false;
+          task.snoozed = true;
+          task.snoozeUntil = Date.now() + minutes * 60 * 1000;
+
+          saveToStorage();
+
+          if (scheduledChecks[taskId]) {
+            clearTimeout(scheduledChecks[taskId]);
+            delete scheduledChecks[taskId];
+          }
+
+          if (snoozeTimeouts[taskId]) {
+            clearTimeout(snoozeTimeouts[taskId]);
+            delete snoozeTimeouts[taskId];
+          }
+
+          snoozeTimeouts[taskId] = setTimeout(() => {
+            const currentTask = tasks.find((t) => t.id === taskId);
+            if (currentTask && !currentTask.completed) {
+              currentTask.snoozed = false;
+              currentTask.snoozeUntil = null;
+
+              saveToStorage();
+
+              showNotification(currentTask);
+            }
+
+            delete snoozeTimeouts[taskId];
+          }, minutes * 60 * 1000);
+
+          showToast(`Notifikasi untuk "${task.title}" ditunda selama ${minutes} menit.`, "info");
+        } else {
+        }
+      }
+
+      function completeTaskFromSW(taskId) {
+        const task = tasks.find((t) => t.id === taskId);
+        if (task) {
+          forceStopAlarm();
+          task.completed = true;
+          saveToStorage();
+
+          renderTasks($(".filter-buttons .btn.active").data("filter"));
+          updateStats();
+          updateCalendar();
+          updateCharts();
+
+          addToStreak();
+
+          if (currentNotificationTask && currentNotificationTask.id === taskId) {
+            currentNotificationTask = null;
+          }
+
+          showToast(`Tugas "${task.title}" ditandai sebagai selesai`, "success");
+        } else {
+        }
+      }
+
+      function dismissAlarmFromSW() {
+        stopContinuousAlarm();
+        currentNotificationTask = null;
+        showToast("Alarm dihentikan", "info");
+      }
+
+      // cleanup snooze, helper lain yang simpel
+      function cleanupSnoozeTimeouts() {
+        Object.keys(snoozeTimeouts).forEach((taskId) => {
+          clearTimeout(snoozeTimeouts[taskId]);
+          delete snoozeTimeouts[taskId];
+        });
+      }
+
+      function renderTasks(filter = "all", sortBy = null) {
+        const taskList = $("#task-list");
+        taskList.empty();
+
+        let filteredTasks = tasks;
+        if (filter === "completed") filteredTasks = tasks.filter((task) => task.completed);
+        else if (filter === "pending") filteredTasks = tasks.filter((task) => !task.completed);
+
+        if (sortBy) {
+          filteredTasks = sortTasks(filteredTasks, sortBy);
+        } else {
+          filteredTasks.sort((a, b) => {
+            if (a.completed !== b.completed) {
+              return a.completed ? 1 : -1;
+            }
+
+            const priorityOrder = { high: 3, medium: 2, low: 1 };
+            const priorityDiff = priorityOrder[b.priority] - priorityOrder[a.priority];
+            if (priorityDiff !== 0) return priorityDiff;
+
+            if (a.dueDate && b.dueDate) {
+              return new Date(a.dueDate) - new Date(b.dueDate);
+            }
+
+            return new Date(b.createdAt) - new Date(a.createdAt);
+          });
+        }
+
+        if (filteredTasks.length === 0) {
+          taskList.html(`
+      <div class="empty-state">
+        <i class="fas fa-clipboard-list"></i>
+        <h4>Belum ada tugas</h4>
+        <p>Klik tombol "+" di bawah untuk menambahkan tugas pertama Anda</p>
+      </div>
+    `);
+          return;
+        }
+
+        filteredTasks.forEach((task) => {
+          const priorityClass = task.priority === "high" ? "priority-high" : task.priority === "medium" ? "priority-medium" : "priority-low";
+
+          const taskItem = $(`
+      <div class="card p-0 my-3 task-item p-3 ${task.completed ? "completed" : ""} ${priorityClass}">
+        <div class="d-flex justify-content-between align-items-start">
+          <div class="flex-grow-1">
+            <div class="form-check">
+              <input class="form-check-input task-checkbox" type="checkbox" ${task.completed ? "checked" : ""} data-id="${task.id}" id="task-${task.id}">
+              <label class="form-check-label task-title ${task.completed ? "text-decoration-line-through" : ""}" for="task-${task.id}">
+                ${task.title}
+              </label>
+            </div>
+            ${task.description ? `<p class="text-muted small mb-1 mt-2">${task.description}</p>` : ""}
+            <div class="task-meta">
+              ${task.priority === "high" ? '<span class="badge bg-danger me-2">Tinggi</span>' : task.priority === "medium" ? '<span class="badge bg-warning me-2">Sedang</span>' : '<span class="badge bg-secondary me-2">Rendah</span>'}
+              ${task.dueDate ? `<small class="task-date"><i class="far fa-calendar me-1"></i>${formatDate(task.dueDate)}</small>` : ""}
+              ${task.notified && !task.completed ? '<span class="badge bg-info"><i class="fas fa-bell me-1"></i>Diingatkan</span>' : ""}
+            </div>
+          </div>
+          <div class="task-actions ms-3">
+            <button class="btn btn-sm ${task.completed ? "btn-primary" : "btn-outline-primary"} edit-task" ${task.completed ? "disabled" : ""} data-id="${task.id}"><i class="fas fa-edit"></i></button>
+            <button class="btn btn-sm btn-outline-danger delete-task" data-id="${task.id}"><i class="fas fa-trash"></i></button>
+          </div>
+        </div>
+      </div>
+    `);
+          taskList.append(taskItem);
+        });
+        attachTaskEventHandlers();
+      }
+
+      function sortTasks(tasks, sortBy) {
+        const sortedTasks = [...tasks];
+
+        switch (sortBy) {
+          case "date-desc":
+            return sortedTasks.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+          case "date-asc":
+            return sortedTasks.sort((a, b) => new Date(a.createdAt) - new Date(a.createdAt));
+          case "priority-high":
+            return sortedTasks.sort((a, b) => {
+              const priorityOrder = { high: 3, medium: 2, low: 1 };
+              return priorityOrder[b.priority] - priorityOrder[a.priority];
+            });
+          case "priority-low":
+            return sortedTasks.sort((a, b) => {
+              const priorityOrder = { high: 3, medium: 2, low: 1 };
+              return priorityOrder[a.priority] - priorityOrder[b.priority];
+            });
+          case "title-asc":
+            return sortedTasks.sort((a, b) => a.title.localeCompare(b.title));
+          case "title-desc":
+            return sortedTasks.sort((a, b) => b.title.localeCompare(a.title));
+          default:
+            return sortedTasks;
+        }
+      }
+
+      function handleFilter() {
+        $(".filter-buttons .btn").removeClass("active");
+        $(this).addClass("active");
+        const filter = $(this).data("filter");
+        renderTasks(filter);
+      }
+
+      function handleSort(e) {
+        e.preventDefault();
+        const sortBy = $(this).data("sort");
+        const currentFilter = $(".filter-buttons .btn.active").data("filter");
+        renderTasks(currentFilter, sortBy);
+      }
+
+      function initCharts() {
+        const taskStatsCtx = document.getElementById("taskStatsChart").getContext("2d");
+        taskStatsChart = new Chart(taskStatsCtx, {
+          type: "doughnut",
+          data: {
+            labels: ["Selesai", "Belum Selesai"],
+            datasets: [
+              {
+                data: [0, 0],
+                backgroundColor: ["#167e22", "#cb9303"],
+                borderWidth: 0,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: "bottom",
+              },
+            },
+          },
+        });
+
+        const priorityCtx = document.getElementById("priorityChart").getContext("2d");
+        priorityChart = new Chart(priorityCtx, {
+          type: "bar",
+          data: {
+            labels: ["Rendah", "Sedang", "Tinggi"],
+            datasets: [
+              {
+                label: "Jumlah Tugas",
+                data: [0, 0, 0],
+                backgroundColor: ["#6c757d", "#ff9e00", "#f72525"],
+                borderWidth: 0,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: {
+                  stepSize: 1,
+                },
+              },
+            },
+            plugins: {
+              legend: {
+                display: false,
+              },
+            },
+          },
+        });
+
+        const dailyProgressCtx = document.getElementById("dailyProgressChart").getContext("2d");
+        dailyProgressChart = new Chart(dailyProgressCtx, {
+          type: "line",
+          data: {
+            labels: [],
+            datasets: [
+              {
+                label: "Tugas Selesai",
+                data: [],
+                borderColor: "#167e22",
+                backgroundColor: "rgba(22, 126, 34, 0.1)",
+                tension: 0.4,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: {
+                  stepSize: 1,
+                },
+              },
+            },
+          },
+        });
+
+        loadChartFilters();
+      }
+
+      function loadChartFilters() {
+        if (settings.chartFilters && settings.chartFilters.startDate && settings.chartFilters.endDate) {
+          const savedStartDate = new Date(settings.chartFilters.startDate);
+          const savedEndDate = new Date(settings.chartFilters.endDate);
+
+          chartStartDatePicker.setDate(savedStartDate);
+          chartEndDatePicker.setDate(savedEndDate);
+
+          chartStartDate = savedStartDate;
+          chartEndDate = savedEndDate;
+        } else {
+          const endDate = new Date();
+          const startDate = new Date();
+          startDate.setDate(startDate.getDate() - 30);
+
+          chartStartDatePicker.setDate(startDate);
+          chartEndDatePicker.setDate(endDate);
+
+          chartStartDate = startDate;
+          chartEndDate = endDate;
+
+          settings.chartFilters = {
+            startDate: startDate,
+            endDate: endDate,
+          };
+          localStorage.setItem("settings", JSON.stringify(settings));
+        }
+      }
+
+      function updateCharts() {
+        if (!taskStatsChart || !priorityChart || !dailyProgressChart) return;
+
+        let filteredTasks = tasks;
+        if (chartStartDate && chartEndDate) {
+          filteredTasks = tasks.filter((task) => {
+            const taskDate = new Date(task.createdAt);
+            return taskDate >= chartStartDate && taskDate <= chartEndDate;
+          });
+        }
+
+        const completedCount = filteredTasks.filter((t) => t.completed).length;
+        const pendingCount = filteredTasks.filter((t) => !t.completed).length;
+        taskStatsChart.data.datasets[0].data = [completedCount, pendingCount];
+        taskStatsChart.update();
+
+        const lowCount = filteredTasks.filter((t) => t.priority === "low").length;
+        const mediumCount = filteredTasks.filter((t) => t.priority === "medium").length;
+        const highCount = filteredTasks.filter((t) => t.priority === "high").length;
+        priorityChart.data.datasets[0].data = [lowCount, mediumCount, highCount];
+        priorityChart.update();
+
+        const days = [];
+        const completedByDay = [];
+
+        if (chartStartDate && chartEndDate) {
+          const currentDate = new Date(chartStartDate);
+          const endDate = new Date(chartEndDate);
+
+          while (currentDate <= endDate) {
+            const dateStr = currentDate.toLocaleDateString("id-ID", {
+              day: "numeric",
+              month: "short",
+            });
+            days.push(dateStr);
+
+            const dayStart = new Date(currentDate);
+            dayStart.setHours(0, 0, 0, 0);
+            const dayEnd = new Date(currentDate);
+            dayEnd.setHours(23, 59, 59, 999);
+
+            const completedOnDay = tasks.filter((t) => {
+              if (!t.completed || !t.createdAt) return false;
+              const createdDate = new Date(t.createdAt);
+              return createdDate >= dayStart && createdDate <= dayEnd;
+            }).length;
+
+            completedByDay.push(completedOnDay);
+            currentDate.setDate(currentDate.getDate() + 1);
+          }
+        } else {
+          for (let i = 6; i >= 0; i--) {
+            const date = new Date();
+            date.setDate(date.getDate() - i);
+            const dateStr = date.toLocaleDateString("id-ID", {
+              day: "numeric",
+              month: "short",
+            });
+            days.push(dateStr);
+
+            const dayStart = new Date(date);
+            dayStart.setHours(0, 0, 0, 0);
+            const dayEnd = new Date(date);
+            dayEnd.setHours(23, 59, 59, 999);
+
+            const completedOnDay = tasks.filter((t) => {
+              if (!t.completed || !t.createdAt) return false;
+              const createdDate = new Date(t.createdAt);
+              return createdDate >= dayStart && createdDate <= dayEnd;
+            }).length;
+
+            completedByDay.push(completedOnDay);
+          }
+        }
+
+        dailyProgressChart.data.labels = days;
+        dailyProgressChart.data.datasets[0].data = completedByDay;
+        dailyProgressChart.update();
+      }
+
+      function applyChartFilter() {
+        settings.chartFilters.startDate = chartStartDate;
+        settings.chartFilters.endDate = chartEndDate;
+
+        localStorage.setItem("settings", JSON.stringify(settings));
+
+        updateCharts();
+        showToast("Filter tanggal diterapkan", "success");
+      }
+
+      function resetChartFilter() {
+        const endDate = new Date();
+        const startDate = new Date();
+        startDate.setDate(startDate.getDate() - 30);
+
+        chartStartDatePicker.setDate(startDate);
+        chartEndDatePicker.setDate(endDate);
+
+        chartStartDate = startDate;
+        chartEndDate = endDate;
+
+        settings.chartFilters.startDate = startDate;
+        settings.chartFilters.endDate = endDate;
+
+        localStorage.setItem("settings", JSON.stringify(settings));
+
+        updateCharts();
+        showToast("Filter tanggal direset", "info");
+      }
+
+      // list suara, update dropdown, preload
+      function initializeSounds() {
+        sounds = [
+          { name: "Alarm", file: "Alarm.mp3", isDefault: true },
+          { name: "Digital Alarm", file: "Digital-Alarm.wav", isDefault: true },
+          {
+            name: "Oversimplified Alarm",
+            file: "Oversimplified-Alarm.mp3",
+            isDefault: true,
+          },
+          { name: "Warning Alarm", file: "Warning-Alarm.wav", isDefault: true },
+        ];
+
+        if (!settings.selectedSound) {
+          settings.selectedSound = "Alarm.mp3";
+          saveToStorage();
+        }
+
+        updateSoundDropdown();
+      }
+
+      function updateSoundDropdown() {
+        $("#soundSelect").empty();
+        sounds.forEach((sound) => {
+          const option = $("<option>").val(sound.file).text(sound.name);
+          $("#soundSelect").append(option);
+        });
+        $("#soundSelect").val(settings.selectedSound);
+      }
+
+      function preloadAlarmAudio() {}
+
+      function showSettingsModal() {
+        $("#enableNotifications").prop("checked", settings.enableNotifications);
+        $("#enableAlarm").prop("checked", settings.enableAlarm);
+        $("#showChartView").prop("checked", settings.showChartView);
+        $("#showCalendarView").prop("checked", settings.showCalendarView);
+        $("#alarmVolume").val(settings.alarmVolume);
+        $("#soundSelect").val(settings.selectedSound || "Alarm.mp3");
+        $("#volumeValue").text(settings.alarmVolume + "%");
+        updateNotificationStatus();
+        $("#settingsModal").modal("show");
+      }
+
+      // Simpan tugas baru ke localStorage dan schedule-nya
+      function saveTask() {
+        const title = $("#taskTitle").val().trim();
+        const date = $("#taskDueDate").val().trim();
+
+        if (!title) {
+          showToast("Judul tugas harus diisi!", "error");
+          return;
+        }
+        if (!date) {
+          showToast("Tanggal harus diisi!", "error");
+          return;
+        }
+
+        // Validasi format tanggal
+        const dueDate = new Date(date);
+        if (isNaN(dueDate.getTime())) {
+          showToast("Format tanggal tidak valid!", "error");
+          return;
+        }
+
+        const newTask = {
+          id: Date.now(),
+          title: title,
+          description: $("#taskDescription").val().trim(),
+          priority: $("#taskPriority").val(),
+          dueDate: dueDate.toISOString(),
+          completed: false,
+          createdAt: new Date().toISOString(),
+          notified: false,
+        };
+
+        tasks.push(newTask);
+        saveToStorage();
+        renderTasks();
+        updateStats();
+        updateCalendar();
+        updateCharts();
+        updateLastActivityDate();
+
+        // Schedule the new task
+        scheduleTaskCheck(newTask);
+
+        // Reset form dan tutup modal
+        $("#taskForm")[0].reset();
+        $("#addTaskModal").modal("hide");
+        showToast("Tugas berhasil ditambahkan!", "success");
+      }
+
+      // Update tugas
+      function updateTask() {
+        const taskId = parseInt($("#editTaskId").val());
+        const taskIndex = tasks.findIndex((task) => task.id === taskId);
+        if (taskIndex !== -1) {
+          const oldDueDate = tasks[taskIndex].dueDate;
+
+          tasks[taskIndex].title = $("#editTaskTitle").val().trim();
+          tasks[taskIndex].description = $("#editTaskDescription").val().trim();
+          tasks[taskIndex].priority = $("#editTaskPriority").val();
+
+          const dueDateValue = $("#editTaskDueDate").val();
+          if (dueDateValue) {
+            if (dueDateValue.includes("T")) {
+              tasks[taskIndex].dueDate = dueDateValue;
+            } else {
+              const dateObj = new Date(dueDateValue);
+              tasks[taskIndex].dueDate = dateObj.toISOString();
+            }
+          }
+
+          if (oldDueDate !== tasks[taskIndex].dueDate) {
+            tasks[taskIndex].notified = false;
+            tasks[taskIndex].snoozed = false;
+            tasks[taskIndex].snoozeUntil = null;
+
+            if (scheduledChecks[taskId]) {
+              clearTimeout(scheduledChecks[taskId]);
+              delete scheduledChecks[taskId];
+            }
+
+            if (snoozeTimeouts[taskId]) {
+              clearTimeout(snoozeTimeouts[taskId]);
+              delete snoozeTimeouts[taskId];
+            }
+
+            if (currentNotificationTask && currentNotificationTask.id === taskId) {
+              stopContinuousAlarm();
+              currentNotificationTask = null;
+            }
+
+            scheduleTaskCheck(tasks[taskIndex]);
+          }
+
+          saveToStorage();
+          renderTasks();
+          updateStats();
+          updateCalendar();
+          updateCharts();
+          updateLastActivityDate();
+          $("#editTaskModal").modal("hide");
+          showToast("Tugas berhasil diperbarui!", "success");
+        }
+      }
+
+      function attachTaskEventHandlers() {
+        $(".task-checkbox")
+          .off("change")
+          .on("change", function () {
+            const taskId = parseInt($(this).data("id"));
+            const taskIndex = tasks.findIndex((task) => task.id === taskId);
+            if (taskIndex !== -1) {
+              const wasCompleted = tasks[taskIndex].completed;
+              const nowCompleted = $(this).is(":checked");
+              tasks[taskIndex].completed = nowCompleted;
+              if (nowCompleted && !wasCompleted) addToStreak();
+              else if (!nowCompleted && wasCompleted) removeFromStreak();
+              saveToStorage();
+              renderTasks($(".filter-buttons .btn.active").data("filter"));
+              updateStats();
+              updateCalendar();
+              updateCharts();
+              updateLastActivityDate();
+              checkStreakInactivity();
+            }
+          });
+
+        $(".edit-task")
+          .off("click")
+          .on("click", function () {
+            const taskId = parseInt($(this).data("id"));
+            const task = tasks.find((task) => task.id === taskId);
+            if (task) {
+              $("#editTaskId").val(task.id);
+              $("#editTaskTitle").val(task.title);
+              $("#editTaskDescription").val(task.description);
+              $("#editTaskPriority").val(task.priority);
+
+              if (task.dueDate) {
+                const dateObj = new Date(task.dueDate);
+                if (!isNaN(dateObj.getTime())) {
+                  const year = dateObj.getFullYear();
+                  const month = String(dateObj.getMonth() + 1).padStart(2, "0");
+                  const day = String(dateObj.getDate()).padStart(2, "0");
+                  const hours = String(dateObj.getHours()).padStart(2, "0");
+                  const minutes = String(dateObj.getMinutes()).padStart(2, "0");
+                  const formattedDate = `${year}-${month}-${day} ${hours}:${minutes}`;
+                  $("#editTaskDueDate").val(formattedDate);
+                } else {
+                  $("#editTaskDueDate").val("");
+                }
+              } else {
+                $("#editTaskDueDate").val("");
+              }
+
+              $("#editTaskModal").modal("show");
+            }
+          });
+
+        $(".delete-task")
+          .off("click")
+          .on("click", function () {
+            const taskId = parseInt($(this).data("id"));
+            const task = tasks.find((task) => task.id === taskId);
+            Swal.fire({
+              title: "Hapus Tugas?",
+              text: "Tugas akan dihapus permanen!",
+              icon: "warning",
+              showCancelButton: true,
+              confirmButtonText: "Ya, Hapus!",
+              cancelButtonText: "Batal",
+            }).then((result) => {
+              if (result.isConfirmed) {
+                if (task && task.completed) removeFromStreak();
+
+                if (scheduledChecks[taskId]) {
+                  clearTimeout(scheduledChecks[taskId]);
+                  delete scheduledChecks[taskId];
+                }
+
+                tasks = tasks.filter((task) => task.id !== taskId);
+                saveToStorage();
+                renderTasks($(".filter-buttons .btn.active").data("filter"));
+                updateStats();
+                updateCalendar();
+                updateCharts();
+                updateLastActivityDate();
+                checkStreakInactivity();
+                showToast("Tugas berhasil dihapus!", "success");
+              }
+            });
+          });
+      }
+
+      function toggleTaskCompletion() {
+        if (currentTaskDetail) {
+          const wasCompleted = currentTaskDetail.completed;
+          const nowCompleted = $(this).is(":checked");
+
+          if (wasCompleted !== nowCompleted) {
+            currentTaskDetail.completed = nowCompleted;
+            if (nowCompleted && !wasCompleted) addToStreak();
+            else if (!nowCompleted && wasCompleted) removeFromStreak();
+
+            saveToStorage();
+            updateCalendar();
+            updateStats();
+            updateCharts();
+            renderTasks($(".filter-buttons .btn.active").data("filter"));
+            updateTaskDetailModal(currentTaskDetail);
+          }
+        }
+      }
+
+      function editTaskFromDetail() {
+        if (currentTaskDetail) {
+          $("#taskDetailModal").modal("hide");
+          $("#editTaskId").val(currentTaskDetail.id);
+          $("#editTaskTitle").val(currentTaskDetail.title);
+          $("#editTaskDescription").val(currentTaskDetail.description);
+          $("#editTaskPriority").val(currentTaskDetail.priority);
+
+          if (currentTaskDetail.dueDate) {
+            const dateObj = new Date(currentTaskDetail.dueDate);
+            if (!isNaN(dateObj.getTime())) {
+              const year = dateObj.getFullYear();
+              const month = String(dateObj.getMonth() + 1).padStart(2, "0");
+              const day = String(dateObj.getDate()).padStart(2, "0");
+              const hours = String(dateObj.getHours()).padStart(2, "0");
+              const minutes = String(dateObj.getMinutes()).padStart(2, "0");
+              const formattedDate = `${year}-${month}-${day} ${hours}:${minutes}`;
+              $("#editTaskDueDate").val(formattedDate);
+            } else {
+              $("#editTaskDueDate").val("");
+            }
+          } else {
+            $("#editTaskDueDate").val("");
+          }
+          $("#editTaskModal").modal("show");
+        }
+      }
+
+      function deleteTaskFromDetail() {
+        if (currentTaskDetail) {
+          Swal.fire({
+            title: "Hapus Tugas?",
+            text: "Tugas akan dihapus permanen!",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Ya, Hapus!",
+            cancelButtonText: "Batal",
+          }).then((result) => {
+            if (result.isConfirmed) {
+              if (currentTaskDetail.completed) removeFromStreak();
+
+              if (scheduledChecks[currentTaskDetail.id]) {
+                clearTimeout(scheduledChecks[currentTaskDetail.id]);
+                delete scheduledChecks[currentTaskDetail.id];
+              }
+
+              tasks = tasks.filter((t) => t.id !== currentTaskDetail.id);
+              saveToStorage();
+              updateCalendar();
+              updateStats();
+              updateCharts();
+              renderTasks($(".filter-buttons .btn.active").data("filter"));
+              $("#taskDetailModal").modal("hide");
+              showToast("Tugas berhasil dihapus!", "success");
+            }
+          });
+        }
+      }
+
+      function initCalendar() {
+        const calendarEl = document.getElementById("calendar");
+        if (!calendarEl) {
+          return;
+        }
+
+        calendar = new FullCalendar.Calendar(calendarEl, {
+          initialView: "dayGridMonth",
+          locale: "id",
+          height: "auto",
+          eventTimeFormat: { hour: "2-digit", minute: "2-digit" },
+          headerToolbar: {
+            left: "prev,next today",
+            center: "title",
+            right: "dayGridMonth,timeGridWeek,timeGridDay,listWeek",
+          },
+          buttonText: {
+            today: "Hari Ini",
+            month: "Bulan",
+            week: "Minggu",
+            day: "Hari",
+            list: "Daftar",
+          },
+          events: getCalendarEvents(),
+          eventDidMount: function (info) {
+            if (info.event.extendedProps.completed) {
+              info.el.classList.add("completed-event");
+              info.el.style.opacity = "0.7";
+            }
+          },
+          eventClick: function (info) {
+            showTaskDetail(info.event);
+          },
+          dateClick: function (info) {
+            const clickedDate = new Date(info.date);
+            const today = new Date();
+
+            today.setHours(0, 0, 0, 0);
+            clickedDate.setHours(0, 0, 0, 0);
+
+            if (clickedDate < today) {
+              showToast("Tidak bisa menambah tugas untuk tanggal yang sudah lewat!", "warning");
+              return;
+            }
+
+            const year = clickedDate.getFullYear();
+            const month = String(clickedDate.getMonth() + 1).padStart(2, "0");
+            const day = String(clickedDate.getDate()).padStart(2, "0");
+            const formattedDate = `${year}-${month}-${day} 12:00`;
+
+            $("#taskDueDate").val(formattedDate);
+            $("#addTaskModal").modal("show");
+          },
+        });
+
+        calendar.render();
+      }
+
+      function getCalendarEvents() {
+        return tasks
+          .filter((task) => task.dueDate)
+          .map((task) => ({
+            id: task.id.toString(),
+            title: task.title + (task.priority === "high" ? " ❗ " : ""),
+            start: task.dueDate,
+            color: task.priority === "high" ? "#f72585" : task.completed ? "#4cc9f0" : "#4361ee",
+            extendedProps: {
+              description: task.description,
+              completed: task.completed,
+              priority: task.priority,
+              notified: task.notified,
+            },
+          }));
+      }
+
+      function showTaskDetail(event) {
+        const taskId = parseInt(event.id);
+        const task = tasks.find((t) => t.id === taskId);
+        if (!task) return;
+
+        currentTaskDetail = task;
+        updateTaskDetailModal(task);
+        $("#taskDetailModal").modal("show");
+      }
+
+      function updateTaskDetailModal(task) {
+        const priorityText = {
+          low: "Rendah",
+          medium: "Sedang",
+          high: "Tinggi",
+        };
+        const priorityColor = {
+          low: "secondary",
+          medium: "warning",
+          high: "danger",
+        };
+
+        const taskIcon = $("#detailTaskIcon");
+        taskIcon.removeClass("high medium low completed");
+
+        if (task.completed) {
+          taskIcon.addClass("completed");
+          taskIcon.html('<i class="fas fa-check-circle"></i>');
+        } else {
+          taskIcon.addClass(task.priority);
+          taskIcon.html('<i class="fa-regular fa-circle-dot"></i>');
+        }
+
+        $("#detailTaskTitle").text(task.title);
+
+        const statusBadge = $("#detailTaskStatus");
+        statusBadge.removeClass("bg-success bg-warning");
+        if (task.completed) {
+          statusBadge.addClass("bg-success").text("Selesai");
+        } else {
+          statusBadge.addClass("bg-warning").text("Belum Selesai");
+        }
+
+        const priorityBadge = $("#detailTaskPriority");
+        priorityBadge.removeClass("bg-secondary bg-warning bg-danger");
+        priorityBadge.addClass(`bg-${priorityColor[task.priority]}`).text(priorityText[task.priority]);
+
+        $("#detailTaskDueDate").text(task.dueDate ? formatDate(task.dueDate) : "Tidak ada tanggal kapan tugas dikerjakan");
+        $("#detailTaskCreated").text(task.createdAt ? formatDate(task.createdAt) : "Tidak diketahui");
+
+        const descriptionElement = $("#detailTaskDescription");
+        if (task.description && task.description.trim() !== "") {
+          descriptionElement.html(task.description.replace(/\n/g, "<br>"));
+        } else {
+          descriptionElement.html('<span class="text-muted">Tidak ada deskripsi</span>');
+        }
+
+        $("#detailTaskCompleted").prop("checked", task.completed);
+        $("#detailTaskStatusText").text(task.completed ? "Tandai sebagai belum selesai" : "Tandai sebagai selesai");
+      }
+
+      function addToStreak() {
+        const today = new Date().toDateString();
+        const oldStreakLevel = streakData.currentStreak;
+        const wasInactive = streakData.isStreakInactive;
+
+        streakData.lastCompletedDate = today;
+
+        const totalCompletedTasks = tasks.filter((t) => t.completed).length;
+        const newStreakLevel = Math.floor(totalCompletedTasks / 3);
+
+        streakData.currentStreak = newStreakLevel;
+
+        if (wasInactive && newStreakLevel > oldStreakLevel) {
+          streakData.isStreakInactive = false;
+          showToast("Streak telah diaktifkan kembali!", "success");
+        }
+
+        if (newStreakLevel > oldStreakLevel && !wasInactive) {
+          showToast(`Level Streak meningkat menjadi ${streakData.currentStreak}!`, "success");
+        }
+
+        updateStreak();
+        saveToStorage();
+      }
+
+      function removeFromStreak() {
+        const totalCompletedTasks = tasks.filter((t) => t.completed).length;
+        const newStreakLevel = Math.floor(totalCompletedTasks / 3);
+
+        if (newStreakLevel < streakData.currentStreak) {
+          showToast(`Level Streak berkurang menjadi ${newStreakLevel}`, "warning");
+        }
+
+        streakData.currentStreak = newStreakLevel;
+
+        updateStreak();
+        saveToStorage();
+      }
+
+      function checkStreakInactivity() {
+        const today = new Date();
+        const threeDaysAgo = new Date(today.getTime() - 3 * 86400000);
+        const totalCompletedTasks = tasks.filter((t) => t.completed).length;
+        const tasksNeededForNextLevel = 3 - (totalCompletedTasks % 3);
+
+        const shouldBeInactive = streakData.lastCompletedDate && new Date(streakData.lastCompletedDate) < threeDaysAgo;
+
+        if (!shouldBeInactive && streakData.isStreakInactive) {
+          streakData.isStreakInactive = false;
+          showToast("Streak telah diaktifkan kembali!", "success");
+        } else if (shouldBeInactive && !streakData.isStreakInactive) {
+          streakData.isStreakInactive = true;
+          showToast(`Streak tidak aktif. Selesaikan ${tasksNeededForNextLevel} tugas untuk mengaktifkannya kembali.`, "warning");
+        }
+
+        updateStreak();
+        saveToStorage();
+      }
+
+      function updateStreak() {
+        streakData.currentStreak = Math.max(0, streakData.currentStreak);
+
+        $("#streak-count").text(streakData.currentStreak);
+        const streakIcon = $("#streak-icon");
+        const streakInfo = $("#streak-info");
+        streakIcon.removeClass("streak-orange streak-blue streak-red streak-purple streak-gray streak-active");
+
+        if (streakData.currentStreak === 0) {
+          const totalCompletedTasks = tasks.filter((t) => t.completed).length;
+          const tasksNeededForNextLevel = 3 - (totalCompletedTasks % 3);
+          streakIcon.addClass("streak-gray");
+          streakInfo.html(`Mulai streakmu dengan menyelesaikan ${tasksNeededForNextLevel} tugas!`);
+        } else {
+          const totalCompletedTasks = tasks.filter((t) => t.completed).length;
+          const tasksNeededForNextLevel = 3 - (totalCompletedTasks % 3);
+          let message = `Level Streak: ${streakData.currentStreak} (${tasksNeededForNextLevel} tugas lagi ke level berikutnya)`;
+
+          if (streakData.currentStreak < 5) {
+            streakIcon.addClass("streak-orange streak-active");
+            message += " - Ayo semangat!";
+          } else if (streakData.currentStreak < 10) {
+            streakIcon.addClass("streak-blue streak-active");
+            message += " - Hebat!";
+          } else if (streakData.currentStreak < 25) {
+            streakIcon.addClass("streak-red streak-active");
+            message += " - Luar biasa!";
+          } else if (streakData.currentStreak < 40) {
+            streakIcon.addClass("streak-purple streak-active");
+            message += " - Artis!";
+          } else {
+            streakIcon.addClass("streak-black streak-active");
+            message += " - Unknown!!";
+          }
+
+          if (streakData.isStreakInactive) {
+            streakIcon.addClass("streak-gray");
+            message = `<span style="color: var(--danger-color);">[Tidak Aktif]</span> Segera Akitifkan kembali dengan menyelesaikan ${tasksNeededForNextLevel} tugas!`;
+          }
+
+          streakInfo.html(message);
+        }
+
+        saveToStorage();
+      }
+
+      function showToast(message, type = "info", duration = 1500) {
+        const toastConfig = {
+          text: message,
+          duration: duration,
+          gravity: "top",
+          position: "right",
+          stopOnFocus: true,
+        };
+        switch (type) {
+          case "success":
+            toastConfig.style = {
+              background: "linear-gradient(135deg, #00b09b, #96c93d)",
+            };
+            break;
+          case "error":
+            toastConfig.style = {
+              background: "linear-gradient(135deg, #ff416c, #ff4b2b)",
+            };
+            break;
+          case "warning":
+            toastConfig.style = {
+              background: "linear-gradient(135deg, #f7971e, #ffd200)",
+            };
+            break;
+          default:
+            toastConfig.style = {
+              background: "linear-gradient(135deg, var(--primary-color), var(--secondary-color))",
+            };
+        }
+        Toastify(toastConfig).showToast();
+      }
+
+      function saveSettings() {
+        settings.enableNotifications = $("#enableNotifications").is(":checked");
+        settings.enableAlarm = $("#enableAlarm").is(":checked");
+        settings.showChartView = $("#showChartView").is(":checked");
+        settings.showCalendarView = $("#showCalendarView").is(":checked");
+        settings.alarmVolume = $("#alarmVolume").val();
+        settings.selectedSound = $("#soundSelect").val();
+
+        localStorage.setItem("settings", JSON.stringify(settings));
+
+        if (settings.showChartView) {
+          $("#chartViewBtn").show();
+        } else {
+          $("#chartViewBtn").hide();
+          if (currentView === "chart") {
+            switchView("list");
+          }
+        }
+
+        if (settings.showCalendarView) {
+          $("#calendarViewBtn").show();
+        } else {
+          $("#calendarViewBtn").hide();
+          if (currentView === "calendar") {
+            switchView("list");
+          }
+        }
+
+        $("#settingsModal").modal("hide");
+        showToast("Pengaturan berhasil disimpan!", "success");
+      }
+
+      function checkNotificationPermission() {
+        if ("Notification" in window) {
+          updateNotificationStatus();
+        }
+      }
+
+      function updateNotificationStatus() {
+        if (!("Notification" in window)) {
+          $("#notificationStatusIcon").removeClass("notification-status-granted notification-status-denied notification-status-default");
+          $("#notificationStatusIcon").addClass("notification-status-denied");
+          $("#notificationStatusIcon").html('<i class="fas fa-times"></i>');
+          $("#notificationStatusText").text("Browser tidak mendukung notifikasi");
+          return;
+        }
+
+        const statusIcon = $("#notificationStatusIcon");
+        const statusText = $("#notificationStatusText");
+
+        statusIcon.removeClass("notification-status-granted notification-status-denied notification-status-default");
+
+        switch (Notification.permission) {
+          case "granted":
+            statusIcon.addClass("notification-status-granted");
+            statusIcon.html('<i class="fas fa-check"></i>');
+            statusText.text("Notifikasi browser diaktifkan");
+            break;
+          case "denied":
+            statusIcon.addClass("notification-status-denied");
+            statusIcon.html('<i class="fas fa-times"></i>');
+            statusText.text("Notifikasi browser diblokir");
+            break;
+          default:
+            statusIcon.addClass("notification-status-default");
+            statusIcon.html('<i class="fas fa-question"></i>');
+            statusText.text("Status notifikasi tidak diketahui");
+            break;
+        }
+      }
+
+      function requestNotificationPermission() {
+        if ("Notification" in window) {
+          Notification.requestPermission().then((permission) => {
+            settings.notificationPermissionRequested = true;
+            if (permission === "granted" || permission === "denied") {
+              settings.notificationBannerDismissed = true;
+            }
+
+            updateNotificationStatus();
+            hideNotificationBanner();
+
+            if (permission === "granted") {
+              showToast("Notifikasi browser diaktifkan!", "success");
+            } else {
+              showToast("Izin notifikasi ditolak. Notifikasi mungkin tidak muncul.", "warning");
+            }
+
+            saveToStorage();
+          });
+        } else {
+          showToast("Browser Anda tidak mendukung notifikasi.", "error");
+        }
+      }
+
+      function showNotificationBanner() {
+        if (!settings.notificationBannerDismissed && "Notification" in window && Notification.permission === "default" && settings.enableNotifications && !settings.notificationPermissionRequested) {
+          $("#notificationBanner").addClass("show");
+        }
+      }
+
+      function hideNotificationBanner() {
+        $("#notificationBanner").removeClass("show");
+        settings.notificationBannerDismissed = true;
+        saveToStorage();
+      }
+
+      function dismissNotificationBanner() {
+        hideNotificationBanner();
+        showToast("Anda dapat mengaktifkan notifikasi kapan saja di pengaturan", "info");
+      }
+
+      function setupPageVisibility() {
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+        window.addEventListener("focus", handlePageFocus);
+        window.addEventListener("blur", handlePageBlur);
+      }
+
+      function handleVisibilityChange() {
+        isPageVisible = document.visibilityState === "visible";
+      }
+
+      function handlePageFocus() {
+        isPageVisible = true;
+      }
+
+      function handlePageBlur() {
+        isPageVisible = false;
+      }
+
+      function updateCalendar() {
+        if (calendar) {
+          calendar.removeAllEvents();
+          const events = getCalendarEvents();
+          events.forEach((event) => calendar.addEvent(event));
+          calendar.render();
+        }
+      }
+
+      function updateStats() {
+        $("#total-tasks").text(tasks.length);
+        $("#completed-tasks").text(tasks.filter((t) => t.completed).length);
+        $("#pending-tasks").text(tasks.filter((t) => !t.completed).length);
+        $("#high-priority-tasks").text(tasks.filter((t) => t.priority === "high").length);
+      }
+
+      function startClock() {
+        function updateClock() {
+          $("#clock").text(new Date().toLocaleString("id-ID"));
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+      }
+
+      function formatDate(dateString) {
+        if (!dateString) return "";
+        return new Date(dateString).toLocaleDateString("id-ID", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+      }
+
+      function switchView(view) {
+        if (view === "list") {
+          $("#listViewBtn").addClass("active");
+          $("#chartViewBtn").removeClass("active");
+          $("#calendarViewBtn").removeClass("active");
+          $("#listSection").removeClass("d-none");
+          $("#chartSection").addClass("d-none");
+          $("#calendarSection").addClass("d-none");
+          currentView = "list";
+        } else if (view === "chart") {
+          $("#chartViewBtn").addClass("active");
+          $("#listViewBtn").removeClass("active");
+          $("#calendarViewBtn").removeClass("active");
+          $("#chartSection").removeClass("d-none");
+          $("#listSection").addClass("d-none");
+          $("#calendarSection").addClass("d-none");
+          currentView = "chart";
+          updateCharts();
+        } else {
+          $("#calendarViewBtn").addClass("active");
+          $("#listViewBtn").removeClass("active");
+          $("#chartViewBtn").removeClass("active");
+          $("#calendarSection").removeClass("d-none");
+          $("#listSection").addClass("d-none");
+          $("#chartSection").addClass("d-none");
+          currentView = "calendar";
+          if (!calendar) initCalendar();
+          else updateCalendar();
+        }
+
+        localStorage.setItem("currentView", currentView);
+      }
+
+      function updateLastActivityDate() {
+        streakData.lastActivityDate = new Date().toISOString();
+        saveToStorage();
+      }
+
+      function saveToStorage() {
+        localStorage.setItem("tasks", JSON.stringify(tasks));
+        localStorage.setItem("streakData", JSON.stringify(streakData));
+        localStorage.setItem("settings", JSON.stringify(settings));
+        localStorage.setItem("currentView", currentView);
+      }
+
+      // Export & Clear data helpers
+      function exportData() {
+        try {
+          const ts = new Date().toISOString().replace(/[:.]/g, "-");
+          let text = `Ekspor Data - Aplikasi Pengingat Tugas\nTanggal: ${new Date().toLocaleString()}\n\n`;
+          text += `Pengaturan:\n`;
+          text += `- Notifikasi: ${settings.enableNotifications ? "Ya" : "Tidak"}\n`;
+          text += `- Alarm: ${settings.enableAlarm ? "Ya" : "Tidak"}\n`;
+          text += `- Volume Alarm: ${settings.alarmVolume}%\n`;
+          text += `- Suara Terpilih: ${settings.selectedSound || "-"}\n\n`;
+
+          if (!tasks || tasks.length === 0) {
+            text += "(Tidak ada tugas)\n";
+          } else {
+            text += `Tugas (${tasks.length}):\n\n`;
+            tasks.forEach((t, i) => {
+              text += `#${i + 1} ${t.title || "(Tanpa Judul)"} \n`;
+              text += `  Status   : ${t.completed ? "Selesai" : "Belum Selesai"}\n`;
+              text += `  Prioritas: ${t.priority || "-"}\n`;
+              text += `  Tanggal Pengerjaan: ${t.dueDate ? formatDate(t.dueDate) : "-"}\n`;
+              text += `  Deskripsi : ${t.description ? t.description.replace(/\r?\n/g, " ") : "-"}\n\n`;
+            });
+          }
+
+          Swal.fire({
+            title: "Ekspor data",
+            text: "Pilih format file yang ingin diunduh:",
+            showDenyButton: true,
+            showCancelButton: true,
+            confirmButtonText: `Teks (.txt)`,
+            denyButtonText: `PDF (.pdf)`,
+          }).then((result) => {
+            if (result.isConfirmed) {
+              const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = `tasks_export_${ts}.txt`;
+              document.body.appendChild(a);
+              a.click();
+              a.remove();
+              URL.revokeObjectURL(url);
+              showToast("Data diekspor sebagai teks", "success");
+            } else if (result.isDenied) {
+              try {
+                const jspdfLib = window.jspdf || window.jspPDF || null;
+                const jsPDF = jspdfLib ? jspdfLib.jsPDF || jspdfLib.default?.jsPDF || jspdfLib : null;
+                const doc = jsPDF ? new jsPDF() : null;
+                if (!doc) {
+                  const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = `tasks_export_${ts}.txt`;
+                  document.body.appendChild(a);
+                  a.click();
+                  a.remove();
+                  URL.revokeObjectURL(url);
+                  showToast("Library PDF tidak tersedia — mengekspor sebagai teks", "warning");
+                  return;
+                }
+
+                const margin = 10;
+                const pageWidth = doc.internal.pageSize.getWidth() - margin * 2;
+                const lines = doc.splitTextToSize(text, pageWidth);
+                doc.text(lines, margin, 10);
+                doc.save(`tasks_export_${ts}.pdf`);
+                showToast("Data diekspor sebagai PDF", "success");
+              } catch (err) {
+                showToast("Gagal membuat PDF, mengekspor sebagai teks sebagai gantinya", "error");
+                const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `tasks_export_${ts}.txt`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                URL.revokeObjectURL(url);
+              }
+            }
+          });
+        } catch (e) {
+          showToast("Gagal mengekspor data", "error");
+        }
+      }
+
+      function clearAllData() {
+        Swal.fire({
+          title: "Hapus Semua Data?",
+          text: "Semua data akan dihapus permanen!",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonText: "Ya, Hapus",
+          cancelButtonText: "Batal",
+        }).then((result) => {
+          if (result.isConfirmed) {
+            doClearAll();
+          }
+        });
+      }
+
+      function doClearAll() {
+        stopContinuousAlarm();
+        Object.values(scheduledChecks).forEach((t) => clearTimeout(t));
+        scheduledChecks = {};
+        Object.keys(snoozeTimeouts).forEach((k) => {
+          clearTimeout(snoozeTimeouts[k]);
+          delete snoozeTimeouts[k];
+        });
+
+        tasks = [];
+        streakData = { currentStreak: 0, lastCompletedDate: null, lastActivityDate: null, isStreakInactive: false };
+        settings = {
+          enableNotifications: true,
+          enableAlarm: true,
+          showChartView: true,
+          showCalendarView: true,
+          alarmVolume: 80,
+          selectedSound: "Alarm.mp3",
+          notificationPermissionRequested: false,
+          notificationBannerDismissed: false,
+          chartFilters: { startDate: null, endDate: null },
+        };
+
+        saveToStorage();
+
+        renderTasks();
+        updateStats();
+        updateCalendar();
+        updateCharts();
+        updateStreak();
+        showToast("Semua data berhasil dihapus", "success");
+      }
+
+      // Fungsi untuk memastikan service worker terdaftar dengan benar
+      function registerServiceWorker() {
+        if ("serviceWorker" in navigator) {
+          window.addEventListener("load", () => {
+            navigator.serviceWorker
+              .register("./sw.js")
+              .then((registration) => {
+                return navigator.serviceWorker.ready;
+              })
+              .then((registration) => {
+                navigator.serviceWorker.addEventListener("message", handleServiceWorkerMessage);
+                updateNotificationStatus();
+              })
+              .catch((err) => {});
+          });
+        }
+      }
+      registerServiceWorker();
+    </script>
+  </body>
+</html>
